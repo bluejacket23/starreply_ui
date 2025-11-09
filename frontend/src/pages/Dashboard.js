@@ -10,15 +10,15 @@ function Dashboard() {
   const [connectingGoogle, setConnectingGoogle] = useState(false);
   const [updatingTone, setUpdatingTone] = useState(false);
   
-  // Tone sliders (1-5 scale)
-  const [casualProfessional, setCasualProfessional] = useState(3);
-  const [conciseFriendly, setConciseFriendly] = useState(3);
-  const [humbleConfident, setHumbleConfident] = useState(3);
-  const [shortDetailed, setShortDetailed] = useState(3);
-  const [calmExcited, setCalmExcited] = useState(3);
+  // Tone sliders (1-5 scale with decimal precision)
+  const [casualProfessional, setCasualProfessional] = useState(3.0);
+  const [conciseFriendly, setConciseFriendly] = useState(3.0);
+  const [humbleConfident, setHumbleConfident] = useState(3.0);
+  const [shortDetailed, setShortDetailed] = useState(3.0);
+  const [calmExcited, setCalmExcited] = useState(3.0);
   
   // Negative review settings
-  const [empatheticNeutral, setEmpatheticNeutral] = useState(3);
+  const [empatheticNeutral, setEmpatheticNeutral] = useState(3.0);
   const [supportEmail, setSupportEmail] = useState('');
   const [includeSupportEmail, setIncludeSupportEmail] = useState(false);
 
@@ -52,12 +52,12 @@ function Dashboard() {
       // Load saved tone settings if available
       if (response.data.user?.toneSettings) {
         const settings = response.data.user.toneSettings;
-        setCasualProfessional(settings.casualProfessional || 3);
-        setConciseFriendly(settings.conciseFriendly || 3);
-        setHumbleConfident(settings.humbleConfident || 3);
-        setShortDetailed(settings.shortDetailed || 3);
-        setCalmExcited(settings.calmExcited || 3);
-        setEmpatheticNeutral(settings.empatheticNeutral || 3);
+        setCasualProfessional(settings.casualProfessional || 3.0);
+        setConciseFriendly(settings.conciseFriendly || 3.0);
+        setHumbleConfident(settings.humbleConfident || 3.0);
+        setShortDetailed(settings.shortDetailed || 3.0);
+        setCalmExcited(settings.calmExcited || 3.0);
+        setEmpatheticNeutral(settings.empatheticNeutral || 3.0);
         setSupportEmail(settings.supportEmail || '');
         setIncludeSupportEmail(settings.includeSupportEmail || false);
       }
@@ -108,13 +108,15 @@ function Dashboard() {
     }
   };
 
-  const Slider = ({ label, leftLabel, rightLabel, value, onChange, min = 1, max = 5 }) => {
+  const Slider = ({ label, leftLabel, rightLabel, value, onChange, min = 1, max = 5, step = 0.01 }) => {
     const percentage = ((value - min) / (max - min)) * 100;
     return (
       <div className="space-y-2">
         <div className="flex justify-between items-center">
           <label className="text-sm font-medium text-slate-300">{label}</label>
-          <span className="text-xs text-cyan-400 font-semibold bg-slate-900/50 px-2 py-1 rounded">{value}</span>
+          <span className="text-xs text-cyan-400 font-semibold bg-slate-900/50 px-2 py-1 rounded">
+            {value.toFixed(2)}
+          </span>
         </div>
         <div className="flex items-center space-x-3">
           <span className="text-xs text-slate-400 w-20 text-right">{leftLabel}</span>
@@ -123,8 +125,9 @@ function Dashboard() {
               type="range"
               min={min}
               max={max}
+              step={step}
               value={value}
-              onChange={(e) => onChange(parseInt(e.target.value))}
+              onChange={(e) => onChange(parseFloat(e.target.value))}
               className="slider-input w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer"
               style={{ '--slider-progress': `${percentage}%` }}
             />
