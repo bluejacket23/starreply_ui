@@ -110,15 +110,17 @@ function Dashboard() {
 
   const Slider = ({ label, leftLabel, rightLabel, value, onChange, min = 1, max = 5, step = 0.01 }) => {
     const sliderRef = useRef(null);
-    const percentage = Math.max(0, Math.min(100, ((value - min) / (max - min)) * 100));
+    const [localValue, setLocalValue] = useState(value);
+    const [isDragging, setIsDragging] = useState(false);
     
-    const handleChange = (e) => {
-      const newValue = parseFloat(e.target.value);
-      const clampedValue = Math.max(min, Math.min(max, newValue));
-      onChange(clampedValue);
-    };
+    // Sync local value when prop changes (but not during drag)
+    useEffect(() => {
+      if (!isDragging) {
+        setLocalValue(value);
+      }
+    }, [value, isDragging]);
     
-    // Use native input event for continuous updates during drag
+    // Add native input event listener for smooth dragging
     useEffect(() => {
       const slider = sliderRef.current;
       if (!slider) return;
@@ -126,23 +128,44 @@ function Dashboard() {
       const handleInput = (e) => {
         const newValue = parseFloat(e.target.value);
         const clampedValue = Math.max(min, Math.min(max, newValue));
-        onChange(clampedValue);
+        setLocalValue(clampedValue);
       };
       
-      // Add native input event listener for smooth dragging
       slider.addEventListener('input', handleInput);
       
       return () => {
         slider.removeEventListener('input', handleInput);
       };
-    }, [min, max, onChange]);
+    }, [min, max]);
+    
+    const percentage = Math.max(0, Math.min(100, ((localValue - min) / (max - min)) * 100));
+    
+    const handleMouseDown = () => {
+      setIsDragging(true);
+    };
+    
+    const handleMouseUp = () => {
+      setIsDragging(false);
+      // Update parent with final value
+      onChange(localValue);
+    };
+    
+    const handleChange = (e) => {
+      const newValue = parseFloat(e.target.value);
+      const clampedValue = Math.max(min, Math.min(max, newValue));
+      setLocalValue(clampedValue);
+      // Only update parent if not dragging (for click events)
+      if (!isDragging) {
+        onChange(clampedValue);
+      }
+    };
     
     return (
       <div className="space-y-2">
         <div className="flex justify-between items-center">
           <label className="text-sm font-medium text-slate-300">{label}</label>
           <span className="text-xs text-cyan-400 font-semibold bg-slate-900/50 px-2 py-1 rounded">
-            {value.toFixed(2)}
+            {localValue.toFixed(2)}
           </span>
         </div>
         <div className="flex items-center space-x-3">
@@ -154,8 +177,12 @@ function Dashboard() {
               min={min}
               max={max}
               step={step}
-              value={value}
+              value={localValue}
               onChange={handleChange}
+              onMouseDown={handleMouseDown}
+              onMouseUp={handleMouseUp}
+              onTouchStart={handleMouseDown}
+              onTouchEnd={handleMouseUp}
               className="slider-input w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer"
               style={{ '--slider-progress': `${percentage}%` }}
             />
