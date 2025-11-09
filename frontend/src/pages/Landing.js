@@ -355,7 +355,7 @@ function Landing() {
                 visibleElements.has('hero-content') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
               }`}
             >
-              <h1 className="text-5xl md:text-6xl font-bold mb-6 leading-tight bg-gradient-to-r from-white via-cyan-200 to-purple-300 bg-clip-text text-transparent" style={{ letterSpacing: '0.02em' }}>
+              <h1 className="text-4xl md:text-5xl font-bold mb-6 leading-relaxed bg-gradient-to-r from-white via-cyan-200 to-purple-300 bg-clip-text text-transparent" style={{ letterSpacing: '0.02em' }}>
                 Turn every review into a 5-star interaction - Without lifting a finger.
               </h1>
               <p className="text-xl text-slate-300 mb-8 leading-relaxed">
@@ -432,8 +432,9 @@ function Landing() {
           >
             Why StarReply?
           </h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {benefits.map((benefit, index) => (
+          {/* Top 3 Benefits */}
+          <div className="grid md:grid-cols-3 gap-8 mb-8">
+            {benefits.slice(0, 3).map((benefit, index) => (
               <div
                 key={index}
                 data-animate
@@ -442,6 +443,26 @@ function Landing() {
                   visibleElements.has(`benefit-${index}`) ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
                 }`}
                 style={{ transitionDelay: `${index * 100}ms` }}
+              >
+                <div className="text-5xl mb-4">{benefit.icon}</div>
+                <h3 className="text-2xl font-bold text-white mb-4">{benefit.title}</h3>
+                <p className="text-slate-300 leading-relaxed">
+                  {benefit.description}
+                </p>
+              </div>
+            ))}
+          </div>
+          {/* Bottom 2 Benefits - Centered */}
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            {benefits.slice(3, 5).map((benefit, index) => (
+              <div
+                key={index + 3}
+                data-animate
+                id={`benefit-${index + 3}`}
+                className={`bg-slate-800/50 backdrop-blur-sm rounded-lg p-6 border border-slate-700/50 hover:border-cyan-400/50 transition-all duration-700 hover:shadow-lg hover:shadow-cyan-500/20 ${
+                  visibleElements.has(`benefit-${index + 3}`) ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
+                }`}
+                style={{ transitionDelay: `${(index + 3) * 100}ms` }}
               >
                 <div className="text-5xl mb-4">{benefit.icon}</div>
                 <h3 className="text-2xl font-bold text-white mb-4">{benefit.title}</h3>

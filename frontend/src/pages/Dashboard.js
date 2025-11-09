@@ -8,16 +8,25 @@ function Dashboard() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [connectingGoogle, setConnectingGoogle] = useState(false);
-  const [tone, setTone] = useState('Friendly');
   const [updatingTone, setUpdatingTone] = useState(false);
+  
+  // Tone sliders (1-5 scale)
+  const [casualProfessional, setCasualProfessional] = useState(3);
+  const [conciseFriendly, setConciseFriendly] = useState(3);
+  const [humbleConfident, setHumbleConfident] = useState(3);
+  const [shortDetailed, setShortDetailed] = useState(3);
+  const [calmExcited, setCalmExcited] = useState(3);
+  
+  // Negative review settings
+  const [empatheticNeutral, setEmpatheticNeutral] = useState(3);
+  const [supportEmail, setSupportEmail] = useState('');
+  const [includeSupportEmail, setIncludeSupportEmail] = useState(false);
 
   useEffect(() => {
-    // Get userId from URL params or localStorage (in production, use proper auth)
     const urlParams = new URLSearchParams(window.location.search);
     const success = urlParams.get('success');
     const canceled = urlParams.get('canceled');
 
-    // Get or create userId
     let storedUserId = localStorage.getItem('userId');
     if (!storedUserId) {
       storedUserId = 'user-' + Date.now();
@@ -26,7 +35,7 @@ function Dashboard() {
     setUserId(storedUserId);
 
     if (success) {
-      alert('Subscription successful! Welcome to ReviewSaaS.');
+      alert('Subscription successful! Welcome to StarReply.');
     } else if (canceled) {
       alert('Subscription was canceled.');
     }
@@ -40,8 +49,17 @@ function Dashboard() {
         params: { userId },
       });
       setStats(response.data);
-      if (response.data.user?.tone) {
-        setTone(response.data.user.tone);
+      // Load saved tone settings if available
+      if (response.data.user?.toneSettings) {
+        const settings = response.data.user.toneSettings;
+        setCasualProfessional(settings.casualProfessional || 3);
+        setConciseFriendly(settings.conciseFriendly || 3);
+        setHumbleConfident(settings.humbleConfident || 3);
+        setShortDetailed(settings.shortDetailed || 3);
+        setCalmExcited(settings.calmExcited || 3);
+        setEmpatheticNeutral(settings.empatheticNeutral || 3);
+        setSupportEmail(settings.supportEmail || '');
+        setIncludeSupportEmail(settings.includeSupportEmail || false);
       }
     } catch (error) {
       console.error('Error fetching stats:', error);
@@ -53,13 +71,10 @@ function Dashboard() {
   const handleConnectGoogle = async () => {
     setConnectingGoogle(true);
     try {
-      // First, get auth URL
       const response = await axios.post(`${API_ENDPOINT}/connect-google`, {
         userId,
         email: localStorage.getItem('email') || 'user@example.com',
       });
-
-      // Redirect to Google OAuth
       window.location.href = response.data.authUrl;
     } catch (error) {
       console.error('Error connecting Google:', error);
@@ -68,44 +83,110 @@ function Dashboard() {
     }
   };
 
-  const handleUpdateTone = async (newTone) => {
+  const handleSaveToneSettings = async () => {
     setUpdatingTone(true);
     try {
-      await axios.post(`${API_ENDPOINT}/update-tone`, {
+      await axios.post(`${API_ENDPOINT}/update-tone-settings`, {
         userId,
-        tone: newTone,
+        toneSettings: {
+          casualProfessional,
+          conciseFriendly,
+          humbleConfident,
+          shortDetailed,
+          calmExcited,
+          empatheticNeutral,
+          supportEmail,
+          includeSupportEmail,
+        },
       });
-      setTone(newTone);
-      alert('Tone updated successfully!');
+      alert('Tone settings saved successfully!');
     } catch (error) {
-      console.error('Error updating tone:', error);
-      alert('Error updating tone. Please try again.');
+      console.error('Error updating tone settings:', error);
+      alert('Error saving tone settings. Please try again.');
     } finally {
       setUpdatingTone(false);
     }
   };
 
+  const Slider = ({ label, leftLabel, rightLabel, value, onChange, min = 1, max = 5 }) => {
+    const percentage = ((value - min) / (max - min)) * 100;
+    return (
+      <div className="space-y-2">
+        <div className="flex justify-between items-center">
+          <label className="text-sm font-medium text-slate-300">{label}</label>
+          <span className="text-xs text-cyan-400 font-semibold bg-slate-900/50 px-2 py-1 rounded">{value}</span>
+        </div>
+        <div className="flex items-center space-x-3">
+          <span className="text-xs text-slate-400 w-20 text-right">{leftLabel}</span>
+          <div className="flex-1 relative">
+            <input
+              type="range"
+              min={min}
+              max={max}
+              value={value}
+              onChange={(e) => onChange(parseInt(e.target.value))}
+              className="slider-input w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer"
+              style={{ '--slider-progress': `${percentage}%` }}
+            />
+          </div>
+          <span className="text-xs text-slate-400 w-20">{rightLabel}</span>
+        </div>
+      </div>
+    );
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+      <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center relative overflow-hidden">
+        {/* Star Background Effect */}
+        <div className="fixed inset-0 pointer-events-none">
+          <div className="absolute inset-0" style={{
+            backgroundImage: `radial-gradient(2px 2px at 20% 30%, white, transparent),
+                              radial-gradient(2px 2px at 60% 70%, rgba(255,255,255,0.8), transparent),
+                              radial-gradient(1px 1px at 50% 50%, white, transparent)`,
+            backgroundSize: '200% 200%',
+            animation: 'twinkle 20s linear infinite'
+          }}></div>
         </div>
+        <div className="text-center relative z-10">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400 mx-auto"></div>
+          <p className="mt-4 text-slate-300">Loading...</p>
+        </div>
+        <style>{`
+          @keyframes twinkle {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+          }
+        `}</style>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white relative overflow-hidden">
+      {/* Star Background Effect */}
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute inset-0" style={{
+          backgroundImage: `radial-gradient(2px 2px at 20% 30%, white, transparent),
+                            radial-gradient(2px 2px at 60% 70%, rgba(255,255,255,0.8), transparent),
+                            radial-gradient(1px 1px at 50% 50%, white, transparent),
+                            radial-gradient(1px 1px at 80% 10%, rgba(255,255,255,0.6), transparent),
+                            radial-gradient(2px 2px at 90% 40%, white, transparent),
+                            radial-gradient(1px 1px at 33% 60%, rgba(255,255,255,0.7), transparent),
+                            radial-gradient(2px 2px at 10% 80%, white, transparent)`,
+          backgroundSize: '200% 200%',
+          animation: 'twinkle 20s linear infinite'
+        }}></div>
+      </div>
+
       {/* Header */}
-      <header className="bg-white shadow-sm">
+      <header className="bg-slate-900/80 backdrop-blur-md border-b border-slate-700/50 relative z-50">
         <div className="container mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-indigo-600">ReviewSaaS Dashboard</h1>
+            <h1 className="text-2xl font-bold text-white tracking-wider" style={{ letterSpacing: '0.1em' }}>StarReply</h1>
             <button
               onClick={() => window.location.href = '/'}
-              className="text-gray-600 hover:text-gray-900"
+              className="text-slate-300 hover:text-cyan-400 transition"
             >
               Home
             </button>
@@ -113,114 +194,192 @@ function Dashboard() {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8 relative z-10">
         {/* Stats Cards */}
         {stats && (
           <div className="grid md:grid-cols-4 gap-6 mb-8">
-            <div className="bg-white rounded-lg shadow p-6">
-              <div className="text-2xl font-bold text-indigo-600">{stats.stats?.totalReviews || 0}</div>
-              <div className="text-gray-600 mt-1">Total Reviews</div>
+            <div className="bg-slate-800/50 backdrop-blur-sm rounded-lg shadow-lg p-6 border border-slate-700/50">
+              <div className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">{stats.stats?.totalReviews || 0}</div>
+              <div className="text-slate-400 mt-1">Total Reviews</div>
             </div>
-            <div className="bg-white rounded-lg shadow p-6">
-              <div className="text-2xl font-bold text-green-600">{stats.stats?.postedReplies || 0}</div>
-              <div className="text-gray-600 mt-1">Replies Posted</div>
+            <div className="bg-slate-800/50 backdrop-blur-sm rounded-lg shadow-lg p-6 border border-slate-700/50">
+              <div className="text-2xl font-bold text-green-400">{stats.stats?.postedReplies || 0}</div>
+              <div className="text-slate-400 mt-1">Replies Posted</div>
             </div>
-            <div className="bg-white rounded-lg shadow p-6">
-              <div className="text-2xl font-bold text-blue-600">{stats.stats?.responseRate || 0}%</div>
-              <div className="text-gray-600 mt-1">Response Rate</div>
+            <div className="bg-slate-800/50 backdrop-blur-sm rounded-lg shadow-lg p-6 border border-slate-700/50">
+              <div className="text-2xl font-bold text-cyan-400">{stats.stats?.responseRate || 0}%</div>
+              <div className="text-slate-400 mt-1">Response Rate</div>
             </div>
-            <div className="bg-white rounded-lg shadow p-6">
-              <div className="text-2xl font-bold text-yellow-600">{stats.stats?.avgRating || 0} ⭐</div>
-              <div className="text-gray-600 mt-1">Avg Rating</div>
+            <div className="bg-slate-800/50 backdrop-blur-sm rounded-lg shadow-lg p-6 border border-slate-700/50">
+              <div className="text-2xl font-bold text-yellow-400">{stats.stats?.avgRating || 0} ⭐</div>
+              <div className="text-slate-400 mt-1">Avg Rating</div>
             </div>
           </div>
         )}
 
-        <div className="grid md:grid-cols-2 gap-8">
+        <div className="grid md:grid-cols-2 gap-8 mb-8">
           {/* Google Connection */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold mb-4">Google Business Profile</h2>
+          <div className="bg-slate-800/50 backdrop-blur-sm rounded-lg shadow-lg p-6 border border-slate-700/50">
+            <h2 className="text-xl font-semibold mb-4 text-white">Google Business Profile</h2>
             {stats?.user?.hasGoogleConnected ? (
               <div className="space-y-4">
-                <div className="flex items-center text-green-600">
+                <div className="flex items-center text-green-400">
                   <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                   <span className="font-semibold">Connected</span>
                 </div>
-                <p className="text-gray-600">Your Google Business Profile is connected and ready to process reviews.</p>
+                <p className="text-slate-300">Your Google Business Profile is connected and ready to process reviews.</p>
               </div>
             ) : (
               <div className="space-y-4">
-                <p className="text-gray-600">
+                <p className="text-slate-300">
                   Connect your Google Business Profile to start automatically replying to reviews.
                 </p>
                 <button
                   onClick={handleConnectGoogle}
                   disabled={connectingGoogle}
-                  className="w-full bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 transition disabled:opacity-50"
+                  className="w-full bg-gradient-to-r from-cyan-500 to-purple-600 text-white py-2 px-4 rounded-lg hover:from-cyan-600 hover:to-purple-700 transition disabled:opacity-50 shadow-lg shadow-cyan-500/50"
                 >
                   {connectingGoogle ? 'Connecting...' : 'Connect Google Account'}
                 </button>
               </div>
             )}
           </div>
+        </div>
 
-          {/* Tone Settings */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold mb-4">Reply Tone</h2>
-            <p className="text-gray-600 mb-4">
-              Choose the tone for AI-generated replies to your reviews.
-            </p>
+        {/* Tone Settings */}
+        <div className="bg-slate-800/50 backdrop-blur-sm rounded-lg shadow-lg p-6 border border-slate-700/50 mb-8">
+          <h2 className="text-xl font-semibold mb-6 text-white">Reply Tone Settings</h2>
+          <p className="text-slate-300 mb-6">
+            Adjust the tone of AI-generated replies using the sliders below. Each slider ranges from 1 to 5.
+          </p>
+          
+          <div className="space-y-6 mb-6">
+            <Slider
+              label="Casual to Professional"
+              leftLabel="Casual"
+              rightLabel="Professional"
+              value={casualProfessional}
+              onChange={setCasualProfessional}
+            />
+            <Slider
+              label="Concise to Friendly"
+              leftLabel="Concise"
+              rightLabel="Friendly"
+              value={conciseFriendly}
+              onChange={setConciseFriendly}
+            />
+            <Slider
+              label="Humble to Confident"
+              leftLabel="Humble"
+              rightLabel="Confident"
+              value={humbleConfident}
+              onChange={setHumbleConfident}
+            />
+            <Slider
+              label="Short to Detailed"
+              leftLabel="Short"
+              rightLabel="Detailed"
+              value={shortDetailed}
+              onChange={setShortDetailed}
+            />
+            <Slider
+              label="Calm to Excited"
+              leftLabel="Calm"
+              rightLabel="Excited"
+              value={calmExcited}
+              onChange={setCalmExcited}
+            />
+          </div>
+
+          <button
+            onClick={handleSaveToneSettings}
+            disabled={updatingTone}
+            className="w-full bg-gradient-to-r from-cyan-500 to-purple-600 text-white py-3 px-4 rounded-lg hover:from-cyan-600 hover:to-purple-700 transition disabled:opacity-50 shadow-lg shadow-cyan-500/50 font-semibold"
+          >
+            {updatingTone ? 'Saving...' : 'Save Tone Settings'}
+          </button>
+        </div>
+
+        {/* Negative Review Settings */}
+        <div className="bg-slate-800/50 backdrop-blur-sm rounded-lg shadow-lg p-6 border border-slate-700/50 mb-8">
+          <h2 className="text-xl font-semibold mb-6 text-white">Negative Review Settings</h2>
+          
+          <div className="space-y-6 mb-6">
+            <Slider
+              label="Empathetic to Neutral"
+              leftLabel="Empathetic"
+              rightLabel="Neutral"
+              value={empatheticNeutral}
+              onChange={setEmpatheticNeutral}
+            />
+            
             <div className="space-y-2">
-              {['Friendly', 'Professional', 'Casual', 'Formal', 'Enthusiastic'].map((toneOption) => (
-                <button
-                  key={toneOption}
-                  onClick={() => handleUpdateTone(toneOption)}
-                  disabled={updatingTone || tone === toneOption}
-                  className={`w-full py-2 px-4 rounded-lg border-2 transition ${
-                    tone === toneOption
-                      ? 'border-indigo-600 bg-indigo-50 text-indigo-600 font-semibold'
-                      : 'border-gray-200 hover:border-indigo-300 text-gray-700'
-                  } disabled:opacity-50`}
-                >
-                  {toneOption}
-                </button>
-              ))}
+              <label className="text-sm font-medium text-slate-300">Support Email</label>
+              <input
+                type="email"
+                placeholder="support@yourbusiness.com"
+                value={supportEmail}
+                onChange={(e) => setSupportEmail(e.target.value)}
+                className="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 placeholder-slate-500"
+              />
+              <p className="text-xs text-slate-400">Enter an email address to include in negative review replies</p>
+            </div>
+
+            <div className="flex items-center space-x-3">
+              <input
+                type="checkbox"
+                id="includeSupportEmail"
+                checked={includeSupportEmail}
+                onChange={(e) => setIncludeSupportEmail(e.target.checked)}
+                className="w-5 h-5 rounded border-slate-700 bg-slate-900/50 text-cyan-500 focus:ring-cyan-500 focus:ring-2"
+              />
+              <label htmlFor="includeSupportEmail" className="text-sm text-slate-300 cursor-pointer">
+                Include support email in negative review replies
+              </label>
             </div>
           </div>
+
+          <button
+            onClick={handleSaveToneSettings}
+            disabled={updatingTone}
+            className="w-full bg-gradient-to-r from-cyan-500 to-purple-600 text-white py-3 px-4 rounded-lg hover:from-cyan-600 hover:to-purple-700 transition disabled:opacity-50 shadow-lg shadow-cyan-500/50 font-semibold"
+          >
+            {updatingTone ? 'Saving...' : 'Save Negative Review Settings'}
+          </button>
         </div>
 
         {/* Recent Reviews */}
         {stats?.recentReviews && stats.recentReviews.length > 0 && (
-          <div className="mt-8 bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold mb-4">Recent Reviews</h2>
+          <div className="bg-slate-800/50 backdrop-blur-sm rounded-lg shadow-lg p-6 border border-slate-700/50">
+            <h2 className="text-xl font-semibold mb-4 text-white">Recent Reviews</h2>
             <div className="space-y-4">
               {stats.recentReviews.map((review) => (
-                <div key={review.reviewId} className="border-l-4 border-indigo-600 pl-4 py-2">
+                <div key={review.reviewId} className="border-l-4 border-cyan-400 pl-4 py-2">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center">
-                      <span className="text-yellow-500 font-semibold mr-2">
+                      <span className="text-yellow-400 font-semibold mr-2">
                         {'⭐'.repeat(review.rating || 0)}
                       </span>
-                      <span className="text-sm text-gray-500">
+                      <span className="text-sm text-slate-400">
                         {new Date(review.createdAt).toLocaleDateString()}
                       </span>
                     </div>
                     {review.posted ? (
-                      <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
+                      <span className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded border border-green-500/30">
                         ✓ Replied
                       </span>
                     ) : (
-                      <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
+                      <span className="text-xs bg-yellow-500/20 text-yellow-400 px-2 py-1 rounded border border-yellow-500/30">
                         Pending
                       </span>
                     )}
                   </div>
-                  <p className="text-gray-700 mb-2">{review.reviewText}</p>
+                  <p className="text-slate-300 mb-2">{review.reviewText}</p>
                   {review.generatedReply && (
-                    <div className="bg-indigo-50 p-3 rounded mt-2">
-                      <p className="text-sm text-indigo-800">
+                    <div className="bg-cyan-500/10 border border-cyan-500/30 p-3 rounded mt-2">
+                      <p className="text-sm text-cyan-300">
                         <strong>Reply:</strong> {review.generatedReply}
                       </p>
                     </div>
@@ -231,9 +390,46 @@ function Dashboard() {
           </div>
         )}
       </main>
+
+      <style>{`
+        @keyframes twinkle {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.3; }
+        }
+        .slider-input {
+          background: linear-gradient(to right, rgb(6, 182, 212) 0%, rgb(6, 182, 212) var(--slider-progress, 50%), rgb(51, 65, 85) var(--slider-progress, 50%), rgb(51, 65, 85) 100%);
+        }
+        .slider-input::-webkit-slider-thumb {
+          appearance: none;
+          width: 20px;
+          height: 20px;
+          border-radius: 50%;
+          background: rgb(6, 182, 212);
+          cursor: pointer;
+          box-shadow: 0 0 10px rgba(6, 182, 212, 0.6), 0 0 20px rgba(6, 182, 212, 0.3);
+          border: 2px solid rgb(8, 145, 178);
+        }
+        .slider-input::-moz-range-thumb {
+          width: 20px;
+          height: 20px;
+          border-radius: 50%;
+          background: rgb(6, 182, 212);
+          cursor: pointer;
+          border: 2px solid rgb(8, 145, 178);
+          box-shadow: 0 0 10px rgba(6, 182, 212, 0.6), 0 0 20px rgba(6, 182, 212, 0.3);
+        }
+        .slider-input::-webkit-slider-runnable-track {
+          height: 8px;
+          border-radius: 4px;
+        }
+        .slider-input::-moz-range-track {
+          height: 8px;
+          border-radius: 4px;
+          background: transparent;
+        }
+      `}</style>
     </div>
   );
 }
 
 export default Dashboard;
-
