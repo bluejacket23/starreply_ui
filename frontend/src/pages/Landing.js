@@ -9,6 +9,7 @@ function Landing() {
   const [activeSection, setActiveSection] = useState('services');
   const [openFaq, setOpenFaq] = useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [visibleElements, setVisibleElements] = useState(new Set());
 
   const servicesRef = useRef(null);
   const benefitsRef = useRef(null);
@@ -16,6 +17,7 @@ function Landing() {
   const pricingRef = useRef(null);
   const faqRef = useRef(null);
 
+  // Scroll-based section highlighting
   useEffect(() => {
     const handleScroll = () => {
       const scrollPosition = window.scrollY + 150;
@@ -36,8 +38,29 @@ function Landing() {
     };
 
     window.addEventListener('scroll', handleScroll);
-    handleScroll(); // Call once to set initial state
+    handleScroll();
     return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Intersection Observer for fade-in animations
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setVisibleElements((prev) => new Set([...prev, entry.target.id]));
+          }
+        });
+      },
+      { threshold: 0.1, rootMargin: '0px 0px -100px 0px' }
+    );
+
+    const elements = document.querySelectorAll('[data-animate]');
+    elements.forEach((el) => observer.observe(el));
+
+    return () => {
+      elements.forEach((el) => observer.unobserve(el));
+    };
   }, []);
 
   const scrollToSection = (ref) => {
@@ -108,21 +131,85 @@ function Landing() {
     }
   ];
 
+  const benefits = [
+    {
+      icon: '⏱️',
+      title: 'Save Hours Every Week',
+      description: 'Spend less time replying, more time running your business. The average small business gets 20-50 Google reviews per month. Replying manually takes ~3-5 minutes per review - that\'s up to 4 hours a month saved with automated, personalized replies.'
+    },
+    {
+      icon: '🚀',
+      title: 'Boost Local SEO & Visibility',
+      description: 'More replies = higher search rankings. Google explicitly states that responding to reviews improves local search visibility. Businesses that respond to 100% of reviews are 1.7x more likely to appear in the Local Pack (top 3 results).* Source: Moz Local Search Ranking Factors 2024'
+    },
+    {
+      icon: '💎',
+      title: 'Build Trust and Loyalty',
+      description: 'Customers feel heard - instantly. 89% of consumers read business responses before choosing where to spend their money. Fast, thoughtful replies can increase repeat visits by 33% and reduce negative review frequency.* Source: ReviewTrackers, 2023'
+    },
+    {
+      icon: '🎯',
+      title: 'Keep Your Brand Voice Consistent',
+      description: 'Set your tone once, and our AI does the rest. Whether your brand is friendly, professional, or playful - every reply sounds natural and on-brand, ensuring consistent messaging across all locations or staff.'
+    },
+    {
+      icon: '⭐',
+      title: 'Improve Reputation and Conversion',
+      description: 'Higher review response rates = more revenue. Responding to reviews leads to an average rating increase of 0.3 stars over time, and a 12% higher conversion rate for local service businesses.* Harvard Business Review "Responding to Online Reviews Boosts Ratings, 2022'
+    }
+  ];
+
+  const howItWorksSteps = [
+    {
+      icon: '🔗',
+      number: '1',
+      title: 'Connect Your Google Account',
+      description: 'Securely sign in with your Google Business profile. We pull in your existing reviews automatically - no setup headaches, no copy-pasting.'
+    },
+    {
+      icon: '🎨',
+      number: '2',
+      title: 'Set Your Brand Voice and Preferences',
+      description: 'Choose your tone - friendly, professional, playful, or custom.'
+    },
+    {
+      icon: '🤖',
+      number: '3',
+      title: 'Let AI Handle the Replies',
+      description: 'Sit back while our AI crafts and posts thoughtful responses to every new review - within minutes.'
+    }
+  ];
+
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white relative overflow-hidden">
+      {/* Star Background Effect */}
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute inset-0" style={{
+          backgroundImage: `radial-gradient(2px 2px at 20% 30%, white, transparent),
+                            radial-gradient(2px 2px at 60% 70%, rgba(255,255,255,0.8), transparent),
+                            radial-gradient(1px 1px at 50% 50%, white, transparent),
+                            radial-gradient(1px 1px at 80% 10%, rgba(255,255,255,0.6), transparent),
+                            radial-gradient(2px 2px at 90% 40%, white, transparent),
+                            radial-gradient(1px 1px at 33% 60%, rgba(255,255,255,0.7), transparent),
+                            radial-gradient(2px 2px at 10% 80%, white, transparent)`,
+          backgroundSize: '200% 200%',
+          animation: 'twinkle 20s linear infinite'
+        }}></div>
+      </div>
+
       {/* Navbar */}
-      <nav className="fixed top-0 left-0 right-0 bg-white shadow-sm z-50">
+      <nav className="fixed top-0 left-0 right-0 bg-slate-900/80 backdrop-blur-md border-b border-slate-700/50 z-50">
         <div className="container mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-indigo-600">StarReply</h1>
-            {/* Desktop Menu */}
-            <div className="hidden lg:flex items-center space-x-8">
+            <h1 className="text-2xl font-bold text-white tracking-wider" style={{ letterSpacing: '0.1em' }}>StarReply</h1>
+            {/* Desktop Menu - moved more to the right */}
+            <div className="hidden lg:flex items-center space-x-8 ml-auto mr-8">
               <button
                 onClick={() => { scrollToSection(servicesRef); setMobileMenuOpen(false); }}
                 className={`transition ${
                   activeSection === 'services' 
-                    ? 'text-indigo-600 font-semibold border-b-2 border-indigo-600' 
-                    : 'text-gray-600 hover:text-indigo-600'
+                    ? 'text-cyan-400 font-semibold border-b-2 border-cyan-400' 
+                    : 'text-slate-300 hover:text-cyan-400'
                 }`}
               >
                 Services
@@ -131,8 +218,8 @@ function Landing() {
                 onClick={() => { scrollToSection(benefitsRef); setMobileMenuOpen(false); }}
                 className={`transition ${
                   activeSection === 'benefits' 
-                    ? 'text-indigo-600 font-semibold border-b-2 border-indigo-600' 
-                    : 'text-gray-600 hover:text-indigo-600'
+                    ? 'text-cyan-400 font-semibold border-b-2 border-cyan-400' 
+                    : 'text-slate-300 hover:text-cyan-400'
                 }`}
               >
                 Benefits
@@ -141,8 +228,8 @@ function Landing() {
                 onClick={() => { scrollToSection(howItWorksRef); setMobileMenuOpen(false); }}
                 className={`transition ${
                   activeSection === 'how-it-works' 
-                    ? 'text-indigo-600 font-semibold border-b-2 border-indigo-600' 
-                    : 'text-gray-600 hover:text-indigo-600'
+                    ? 'text-cyan-400 font-semibold border-b-2 border-cyan-400' 
+                    : 'text-slate-300 hover:text-cyan-400'
                 }`}
               >
                 How It Works
@@ -151,8 +238,8 @@ function Landing() {
                 onClick={() => { scrollToSection(pricingRef); setMobileMenuOpen(false); }}
                 className={`transition ${
                   activeSection === 'pricing' 
-                    ? 'text-indigo-600 font-semibold border-b-2 border-indigo-600' 
-                    : 'text-gray-600 hover:text-indigo-600'
+                    ? 'text-cyan-400 font-semibold border-b-2 border-cyan-400' 
+                    : 'text-slate-300 hover:text-cyan-400'
                 }`}
               >
                 Pricing
@@ -161,8 +248,8 @@ function Landing() {
                 onClick={() => { scrollToSection(faqRef); setMobileMenuOpen(false); }}
                 className={`transition ${
                   activeSection === 'faq' 
-                    ? 'text-indigo-600 font-semibold border-b-2 border-indigo-600' 
-                    : 'text-gray-600 hover:text-indigo-600'
+                    ? 'text-cyan-400 font-semibold border-b-2 border-cyan-400' 
+                    : 'text-slate-300 hover:text-cyan-400'
                 }`}
               >
                 FAQ
@@ -171,14 +258,14 @@ function Landing() {
             <div className="flex items-center space-x-4">
               <button
                 onClick={() => window.location.href = '/dashboard'}
-                className="hidden sm:block px-4 py-2 text-gray-600 hover:text-indigo-600 transition"
+                className="hidden sm:block px-4 py-2 text-slate-300 hover:text-cyan-400 transition"
               >
                 Sign In
               </button>
               {/* Mobile Menu Button */}
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="lg:hidden text-gray-600 hover:text-indigo-600"
+                className="lg:hidden text-slate-300 hover:text-cyan-400"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   {mobileMenuOpen ? (
@@ -192,14 +279,14 @@ function Landing() {
           </div>
           {/* Mobile Menu */}
           {mobileMenuOpen && (
-            <div className="lg:hidden mt-4 pb-4 border-t border-gray-200">
+            <div className="lg:hidden mt-4 pb-4 border-t border-slate-700">
               <div className="flex flex-col space-y-3 pt-4">
                 <button
                   onClick={() => { scrollToSection(servicesRef); setMobileMenuOpen(false); }}
                   className={`text-left px-2 py-2 transition ${
                     activeSection === 'services' 
-                      ? 'text-indigo-600 font-semibold' 
-                      : 'text-gray-600 hover:text-indigo-600'
+                      ? 'text-cyan-400 font-semibold' 
+                      : 'text-slate-300 hover:text-cyan-400'
                   }`}
                 >
                   Services
@@ -208,8 +295,8 @@ function Landing() {
                   onClick={() => { scrollToSection(benefitsRef); setMobileMenuOpen(false); }}
                   className={`text-left px-2 py-2 transition ${
                     activeSection === 'benefits' 
-                      ? 'text-indigo-600 font-semibold' 
-                      : 'text-gray-600 hover:text-indigo-600'
+                      ? 'text-cyan-400 font-semibold' 
+                      : 'text-slate-300 hover:text-cyan-400'
                   }`}
                 >
                   Benefits
@@ -218,8 +305,8 @@ function Landing() {
                   onClick={() => { scrollToSection(howItWorksRef); setMobileMenuOpen(false); }}
                   className={`text-left px-2 py-2 transition ${
                     activeSection === 'how-it-works' 
-                      ? 'text-indigo-600 font-semibold' 
-                      : 'text-gray-600 hover:text-indigo-600'
+                      ? 'text-cyan-400 font-semibold' 
+                      : 'text-slate-300 hover:text-cyan-400'
                   }`}
                 >
                   How It Works
@@ -228,8 +315,8 @@ function Landing() {
                   onClick={() => { scrollToSection(pricingRef); setMobileMenuOpen(false); }}
                   className={`text-left px-2 py-2 transition ${
                     activeSection === 'pricing' 
-                      ? 'text-indigo-600 font-semibold' 
-                      : 'text-gray-600 hover:text-indigo-600'
+                      ? 'text-cyan-400 font-semibold' 
+                      : 'text-slate-300 hover:text-cyan-400'
                   }`}
                 >
                   Pricing
@@ -238,15 +325,15 @@ function Landing() {
                   onClick={() => { scrollToSection(faqRef); setMobileMenuOpen(false); }}
                   className={`text-left px-2 py-2 transition ${
                     activeSection === 'faq' 
-                      ? 'text-indigo-600 font-semibold' 
-                      : 'text-gray-600 hover:text-indigo-600'
+                      ? 'text-cyan-400 font-semibold' 
+                      : 'text-slate-300 hover:text-cyan-400'
                   }`}
                 >
                   FAQ
                 </button>
                 <button
                   onClick={() => window.location.href = '/dashboard'}
-                  className="text-left px-2 py-2 text-gray-600 hover:text-indigo-600 transition"
+                  className="text-left px-2 py-2 text-slate-300 hover:text-cyan-400 transition"
                 >
                   Sign In
                 </button>
@@ -257,41 +344,53 @@ function Landing() {
       </nav>
 
       {/* Hero Section */}
-      <section ref={servicesRef} className="pt-24 pb-20 bg-gradient-to-br from-indigo-50 to-purple-50">
+      <section ref={servicesRef} className="pt-24 pb-20 relative z-10">
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             {/* Left Content */}
-            <div>
-              <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
+            <div 
+              data-animate
+              id="hero-content"
+              className={`transition-all duration-1000 ${
+                visibleElements.has('hero-content') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
+              }`}
+            >
+              <h1 className="text-5xl md:text-6xl font-bold mb-6 leading-tight bg-gradient-to-r from-white via-cyan-200 to-purple-300 bg-clip-text text-transparent" style={{ letterSpacing: '0.02em' }}>
                 Turn every review into a 5-star interaction - Without lifting a finger.
               </h1>
-              <p className="text-xl text-gray-600 mb-8 leading-relaxed">
+              <p className="text-xl text-slate-300 mb-8 leading-relaxed">
                 Connect your Google Business account, set your tone, and our AI crafts personalized, on-brand replies to every review - immediately.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <button
                   onClick={handleGetStarted}
                   disabled={loading}
-                  className="bg-indigo-600 text-white px-8 py-4 rounded-lg font-semibold hover:bg-indigo-700 transition disabled:opacity-50 text-lg"
+                  className="bg-gradient-to-r from-cyan-500 to-purple-600 text-white px-8 py-4 rounded-lg font-semibold hover:from-cyan-600 hover:to-purple-700 transition disabled:opacity-50 text-lg shadow-lg shadow-cyan-500/50"
                 >
                   {loading ? 'Processing...' : 'Start Free Trial'}
                 </button>
                 <button
                   onClick={() => scrollToSection(howItWorksRef)}
-                  className="bg-white text-indigo-600 border-2 border-indigo-600 px-8 py-4 rounded-lg font-semibold hover:bg-indigo-50 transition text-lg"
+                  className="bg-slate-800/50 text-cyan-400 border-2 border-cyan-400/50 px-8 py-4 rounded-lg font-semibold hover:bg-slate-800 hover:border-cyan-400 transition text-lg backdrop-blur-sm"
                 >
                   See how it works
                 </button>
               </div>
             </div>
             {/* Right Video Placeholder */}
-            <div className="bg-gray-200 rounded-lg aspect-video flex items-center justify-center">
+            <div 
+              data-animate
+              id="hero-video"
+              className={`bg-slate-800/50 backdrop-blur-sm rounded-lg aspect-video flex items-center justify-center border border-slate-700/50 transition-all duration-1000 ${
+                visibleElements.has('hero-video') ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-10'
+              }`}
+            >
               <div className="text-center">
-                <svg className="w-24 h-24 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-24 h-24 text-cyan-400/50 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <p className="text-gray-500 text-lg">How It Works Video</p>
+                <p className="text-slate-400 text-lg">How It Works Video</p>
               </div>
             </div>
           </div>
@@ -299,164 +398,153 @@ function Landing() {
       </section>
 
       {/* Stats Bar */}
-      <section className="bg-indigo-600 text-white py-8">
+      <section className="bg-gradient-to-r from-cyan-600/20 via-purple-600/20 to-cyan-600/20 border-y border-slate-700/50 py-8 backdrop-blur-sm relative z-10">
         <div className="container mx-auto px-4">
           <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16 text-center">
             <div>
-              <div className="text-3xl font-bold">4.2hr</div>
-              <div className="text-indigo-200">saved per month</div>
+              <div className="text-3xl font-bold text-cyan-400">4.2hr</div>
+              <div className="text-slate-400">saved per month</div>
             </div>
-            <div className="hidden md:block">|</div>
+            <div className="hidden md:block text-slate-600">|</div>
             <div>
-              <div className="text-3xl font-bold">+0.3⭐</div>
-              <div className="text-indigo-200">average rating</div>
+              <div className="text-3xl font-bold text-cyan-400">+0.3⭐</div>
+              <div className="text-slate-400">average rating</div>
             </div>
-            <div className="hidden md:block">|</div>
+            <div className="hidden md:block text-slate-600">|</div>
             <div>
-              <div className="text-3xl font-bold">89%</div>
-              <div className="text-indigo-200">more consumer trust</div>
+              <div className="text-3xl font-bold text-cyan-400">89%</div>
+              <div className="text-slate-400">more consumer trust</div>
             </div>
           </div>
         </div>
       </section>
 
       {/* Benefits Section */}
-      <section ref={benefitsRef} className="py-20 bg-white">
+      <section ref={benefitsRef} className="py-20 relative z-10">
         <div className="container mx-auto px-4">
-          <h2 className="text-4xl font-bold text-center text-gray-900 mb-12">Why StarReply?</h2>
+          <h2 
+            data-animate
+            id="benefits-title"
+            className={`text-4xl font-bold text-center mb-12 bg-gradient-to-r from-white to-cyan-200 bg-clip-text text-transparent transition-all duration-1000 ${
+              visibleElements.has('benefits-title') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
+            }`}
+            style={{ letterSpacing: '0.05em' }}
+          >
+            Why StarReply?
+          </h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {/* Benefit 1 */}
-            <div className="bg-gray-50 rounded-lg p-6 shadow-sm hover:shadow-md transition">
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">Save Hours Every Week</h3>
-              <p className="text-gray-600 leading-relaxed">
-                Spend less time replying, more time running your business. The average small business gets 20-50 Google reviews per month. Replying manually takes ~3-5 minutes per review - that's up to 4 hours a month saved with automated, personalized replies.
-              </p>
-            </div>
-
-            {/* Benefit 2 */}
-            <div className="bg-gray-50 rounded-lg p-6 shadow-sm hover:shadow-md transition">
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">Boost Local SEO & Visibility</h3>
-              <p className="text-gray-600 leading-relaxed">
-                More replies = higher search rankings. Google explicitly states that responding to reviews improves local search visibility. Businesses that respond to 100% of reviews are 1.7x more likely to appear in the Local Pack (top 3 results).* Source: Moz Local Search Ranking Factors 2024
-              </p>
-            </div>
-
-            {/* Benefit 3 */}
-            <div className="bg-gray-50 rounded-lg p-6 shadow-sm hover:shadow-md transition">
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">Build Trust and Loyalty</h3>
-              <p className="text-gray-600 leading-relaxed">
-                Customers feel heard - instantly. 89% of consumers read business responses before choosing where to spend their money. Fast, thoughtful replies can increase repeat visits by 33% and reduce negative review frequency.* Source: ReviewTrackers, 2023
-              </p>
-            </div>
-
-            {/* Benefit 4 */}
-            <div className="bg-gray-50 rounded-lg p-6 shadow-sm hover:shadow-md transition">
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">Keep Your Brand Voice Consistent</h3>
-              <p className="text-gray-600 leading-relaxed">
-                Set your tone once, and our AI does the rest. Whether your brand is friendly, professional, or playful - every reply sounds natural and on-brand, ensuring consistent messaging across all locations or staff.
-              </p>
-            </div>
-
-            {/* Benefit 5 */}
-            <div className="bg-gray-50 rounded-lg p-6 shadow-sm hover:shadow-md transition">
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">Improve Reputation and Conversion</h3>
-              <p className="text-gray-600 leading-relaxed">
-                Higher review response rates = more revenue. Responding to reviews leads to an average rating increase of 0.3 stars over time, and a 12% higher conversion rate for local service businesses.* Harvard Business Review "Responding to Online Reviews Boosts Ratings, 2022
-              </p>
-            </div>
+            {benefits.map((benefit, index) => (
+              <div
+                key={index}
+                data-animate
+                id={`benefit-${index}`}
+                className={`bg-slate-800/50 backdrop-blur-sm rounded-lg p-6 border border-slate-700/50 hover:border-cyan-400/50 transition-all duration-700 hover:shadow-lg hover:shadow-cyan-500/20 ${
+                  visibleElements.has(`benefit-${index}`) ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
+                }`}
+                style={{ transitionDelay: `${index * 100}ms` }}
+              >
+                <div className="text-5xl mb-4">{benefit.icon}</div>
+                <h3 className="text-2xl font-bold text-white mb-4">{benefit.title}</h3>
+                <p className="text-slate-300 leading-relaxed">
+                  {benefit.description}
+                </p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
       {/* How It Works Section */}
-      <section ref={howItWorksRef} className="py-20 bg-gradient-to-br from-indigo-50 to-purple-50">
+      <section ref={howItWorksRef} className="py-20 bg-slate-800/30 backdrop-blur-sm relative z-10">
         <div className="container mx-auto px-4">
-          <h2 className="text-4xl font-bold text-center text-gray-900 mb-12">How It Works</h2>
+          <h2 
+            data-animate
+            id="how-it-works-title"
+            className={`text-4xl font-bold text-center mb-12 bg-gradient-to-r from-white to-cyan-200 bg-clip-text text-transparent transition-all duration-1000 ${
+              visibleElements.has('how-it-works-title') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
+            }`}
+            style={{ letterSpacing: '0.05em' }}
+          >
+            How It Works
+          </h2>
           <div className="grid md:grid-cols-3 gap-8 mb-12">
-            {/* Step 1 */}
-            <div className="bg-white rounded-lg p-8 shadow-sm text-center">
-              <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <span className="text-2xl font-bold text-indigo-600">1</span>
+            {howItWorksSteps.map((step, index) => (
+              <div
+                key={index}
+                data-animate
+                id={`step-${index}`}
+                className={`bg-slate-800/50 backdrop-blur-sm rounded-lg p-8 border border-slate-700/50 text-center hover:border-cyan-400/50 transition-all duration-700 hover:shadow-lg hover:shadow-cyan-500/20 ${
+                  visibleElements.has(`step-${index}`) ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
+                }`}
+                style={{ transitionDelay: `${index * 150}ms` }}
+              >
+                <div className="text-5xl mb-4">{step.icon}</div>
+                <div className="w-16 h-16 bg-gradient-to-br from-cyan-500/20 to-purple-600/20 rounded-full flex items-center justify-center mx-auto mb-6 border border-cyan-400/30">
+                  <span className="text-2xl font-bold text-cyan-400">{step.number}</span>
+                </div>
+                <h3 className="text-2xl font-bold text-white mb-4">{step.title}</h3>
+                <p className="text-slate-300 leading-relaxed">
+                  {step.description}
+                </p>
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">Connect Your Google Account</h3>
-              <p className="text-gray-600 leading-relaxed">
-                Securely sign in with your Google Business profile. We pull in your existing reviews automatically - no setup headaches, no copy-pasting.
-              </p>
-            </div>
-
-            {/* Step 2 */}
-            <div className="bg-white rounded-lg p-8 shadow-sm text-center">
-              <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <span className="text-2xl font-bold text-indigo-600">2</span>
-              </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">Set Your Brand Voice and Preferences</h3>
-              <p className="text-gray-600 leading-relaxed">
-                Choose your tone - friendly, professional, playful, or custom.
-              </p>
-            </div>
-
-            {/* Step 3 */}
-            <div className="bg-white rounded-lg p-8 shadow-sm text-center">
-              <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <span className="text-2xl font-bold text-indigo-600">3</span>
-              </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">Let AI Handle the Replies</h3>
-              <p className="text-gray-600 leading-relaxed">
-                Sit back while our AI crafts and posts thoughtful responses to every new review - within minutes.
-              </p>
-            </div>
+            ))}
           </div>
-          <p className="text-center text-xl text-gray-700 font-semibold">
+          <p 
+            data-animate
+            id="how-it-works-footer"
+            className={`text-center text-xl text-cyan-300 font-semibold transition-all duration-1000 ${
+              visibleElements.has('how-it-works-footer') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
+            }`}
+          >
             In just 2 minutes, your Google Reviews are handled - forever.
           </p>
         </div>
       </section>
 
       {/* Pricing Section */}
-      <section ref={pricingRef} className="py-20 bg-white">
+      <section ref={pricingRef} className="py-20 relative z-10">
         <div className="container mx-auto px-4">
-          <h2 className="text-4xl font-bold text-center text-gray-900 mb-12">Pricing</h2>
-          <div className="max-w-md mx-auto bg-white border-2 border-indigo-200 rounded-lg shadow-lg p-8">
+          <h2 
+            data-animate
+            id="pricing-title"
+            className={`text-4xl font-bold text-center mb-12 bg-gradient-to-r from-white to-cyan-200 bg-clip-text text-transparent transition-all duration-1000 ${
+              visibleElements.has('pricing-title') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
+            }`}
+            style={{ letterSpacing: '0.05em' }}
+          >
+            Pricing
+          </h2>
+          <div 
+            data-animate
+            id="pricing-card"
+            className={`max-w-md mx-auto bg-slate-800/50 backdrop-blur-sm border-2 border-cyan-400/30 rounded-lg shadow-xl p-8 hover:border-cyan-400/50 transition-all duration-1000 ${
+              visibleElements.has('pricing-card') ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
+            }`}
+          >
             <div className="text-center mb-8">
-              <div className="text-5xl font-bold text-indigo-600 mb-2">$7</div>
-              <div className="text-gray-600 text-lg">per month</div>
-              <div className="text-xl font-semibold text-gray-900 mt-4">Starter Plan</div>
+              <div className="text-5xl font-bold bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent mb-2">$7</div>
+              <div className="text-slate-400 text-lg">per month</div>
+              <div className="text-xl font-semibold text-white mt-4">Starter Plan</div>
             </div>
             <ul className="space-y-4 mb-8">
-              <li className="flex items-start">
-                <svg className="w-6 h-6 text-green-500 mr-3 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                <span className="text-gray-700">AI auto-replies to all your Google reviews</span>
-              </li>
-              <li className="flex items-start">
-                <svg className="w-6 h-6 text-green-500 mr-3 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                <span className="text-gray-700">Custom tone settings (friendly, professional, witty, etc.)</span>
-              </li>
-              <li className="flex items-start">
-                <svg className="w-6 h-6 text-green-500 mr-3 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                <span className="text-gray-700">Dashboard to view and edit replies</span>
-              </li>
-              <li className="flex items-start">
-                <svg className="w-6 h-6 text-green-500 mr-3 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                <span className="text-gray-700">Secure Google Business integration</span>
-              </li>
-              <li className="flex items-start">
-                <svg className="w-6 h-6 text-green-500 mr-3 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                <span className="text-gray-700">Cancel anytime - no contracts</span>
-              </li>
+              {[
+                'AI auto-replies to all your Google reviews',
+                'Custom tone settings (friendly, professional, witty, etc.)',
+                'Dashboard to view and edit replies',
+                'Secure Google Business integration',
+                'Cancel anytime - no contracts'
+              ].map((feature, index) => (
+                <li key={index} className="flex items-start">
+                  <svg className="w-6 h-6 text-cyan-400 mr-3 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span className="text-slate-300">{feature}</span>
+                </li>
+              ))}
             </ul>
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6 text-center">
-              <p className="text-green-800 font-semibold">Free 7-day trial</p>
-              <p className="text-green-700 text-sm mt-1">Try it risk-free. No credit card required.</p>
+            <div className="bg-cyan-500/10 border border-cyan-400/30 rounded-lg p-4 mb-6 text-center">
+              <p className="text-cyan-300 font-semibold">Free 7-day trial</p>
+              <p className="text-slate-400 text-sm mt-1">Try it risk-free. No credit card required.</p>
             </div>
             <div className="space-y-3">
               <input
@@ -464,12 +552,12 @@ function Landing() {
                 placeholder="Enter your email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 placeholder-slate-500"
               />
               <button
                 onClick={handleGetStarted}
                 disabled={loading}
-                className="w-full bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700 transition disabled:opacity-50"
+                className="w-full bg-gradient-to-r from-cyan-500 to-purple-600 text-white py-3 rounded-lg font-semibold hover:from-cyan-600 hover:to-purple-700 transition disabled:opacity-50 shadow-lg shadow-cyan-500/50"
               >
                 {loading ? 'Processing...' : 'Start Free Trial'}
               </button>
@@ -479,19 +567,36 @@ function Landing() {
       </section>
 
       {/* FAQ Section */}
-      <section ref={faqRef} className="py-20 bg-gray-50">
+      <section ref={faqRef} className="py-20 bg-slate-800/30 backdrop-blur-sm relative z-10">
         <div className="container mx-auto px-4 max-w-3xl">
-          <h2 className="text-4xl font-bold text-center text-gray-900 mb-12">Frequently Asked Questions</h2>
+          <h2 
+            data-animate
+            id="faq-title"
+            className={`text-4xl font-bold text-center mb-12 bg-gradient-to-r from-white to-cyan-200 bg-clip-text text-transparent transition-all duration-1000 ${
+              visibleElements.has('faq-title') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
+            }`}
+            style={{ letterSpacing: '0.05em' }}
+          >
+            Frequently Asked Questions
+          </h2>
           <div className="space-y-4">
             {faqs.map((faq, index) => (
-              <div key={index} className="bg-white rounded-lg shadow-sm overflow-hidden">
+              <div
+                key={index}
+                data-animate
+                id={`faq-${index}`}
+                className={`bg-slate-800/50 backdrop-blur-sm rounded-lg border border-slate-700/50 overflow-hidden transition-all duration-700 ${
+                  visibleElements.has(`faq-${index}`) ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-10'
+                }`}
+                style={{ transitionDelay: `${index * 50}ms` }}
+              >
                 <button
                   onClick={() => setOpenFaq(openFaq === index ? null : index)}
-                  className="w-full px-6 py-4 text-left flex justify-between items-center hover:bg-gray-50 transition"
+                  className="w-full px-6 py-4 text-left flex justify-between items-center hover:bg-slate-800/50 transition"
                 >
-                  <span className="font-semibold text-gray-900 pr-4">{faq.question}</span>
+                  <span className="font-semibold text-white pr-4">{faq.question}</span>
                   <svg
-                    className={`w-5 h-5 text-indigo-600 flex-shrink-0 transition-transform ${
+                    className={`w-5 h-5 text-cyan-400 flex-shrink-0 transition-transform ${
                       openFaq === index ? 'transform rotate-180' : ''
                     }`}
                     fill="none"
@@ -502,7 +607,7 @@ function Landing() {
                   </svg>
                 </button>
                 {openFaq === index && (
-                  <div className="px-6 py-4 text-gray-600 leading-relaxed border-t border-gray-100">
+                  <div className="px-6 py-4 text-slate-300 leading-relaxed border-t border-slate-700/50">
                     {faq.answer}
                   </div>
                 )}
@@ -513,26 +618,47 @@ function Landing() {
       </section>
 
       {/* Final CTA Section */}
-      <section className="py-20 bg-gradient-to-br from-indigo-600 to-purple-700">
+      <section className="py-20 bg-gradient-to-br from-cyan-600/20 via-purple-600/20 to-cyan-600/20 border-t border-slate-700/50 relative z-10">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+          <h2 
+            data-animate
+            id="cta-title"
+            className={`text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-white via-cyan-200 to-purple-300 bg-clip-text text-transparent transition-all duration-1000 ${
+              visibleElements.has('cta-title') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
+            }`}
+            style={{ letterSpacing: '0.02em' }}
+          >
             Ready to turn every review into a 5-star interaction?
           </h2>
-          <p className="text-xl text-indigo-100 mb-8 max-w-2xl mx-auto">
+          <p 
+            data-animate
+            id="cta-subtitle"
+            className={`text-xl text-slate-300 mb-8 max-w-2xl mx-auto transition-all duration-1000 ${
+              visibleElements.has('cta-subtitle') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
+            }`}
+            style={{ transitionDelay: '200ms' }}
+          >
             Start your free 7-day trial today. No credit card required.
           </p>
-          <div className="max-w-md mx-auto">
+          <div 
+            data-animate
+            id="cta-form"
+            className={`max-w-md mx-auto transition-all duration-1000 ${
+              visibleElements.has('cta-form') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
+            }`}
+            style={{ transitionDelay: '400ms' }}
+          >
             <input
               type="email"
               placeholder="Enter your email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-white mb-4 text-lg"
+              className="w-full px-4 py-4 bg-slate-900/50 border border-slate-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 placeholder-slate-500 mb-4 text-lg"
             />
             <button
               onClick={handleGetStarted}
               disabled={loading}
-              className="w-full bg-white text-indigo-600 py-4 rounded-lg font-semibold hover:bg-indigo-50 transition disabled:opacity-50 text-lg"
+              className="w-full bg-gradient-to-r from-cyan-500 to-purple-600 text-white py-4 rounded-lg font-semibold hover:from-cyan-600 hover:to-purple-700 transition disabled:opacity-50 text-lg shadow-lg shadow-cyan-500/50"
             >
               {loading ? 'Processing...' : 'Start Free Trial'}
             </button>
@@ -541,11 +667,18 @@ function Landing() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-gray-400 py-8">
+      <footer className="bg-slate-900/80 backdrop-blur-sm border-t border-slate-700/50 text-slate-400 py-8 relative z-10">
         <div className="container mx-auto px-4 text-center">
           <p>&copy; 2024 StarReply. All rights reserved.</p>
         </div>
       </footer>
+
+      <style>{`
+        @keyframes twinkle {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.3; }
+        }
+      `}</style>
     </div>
   );
 }
