@@ -109,7 +109,15 @@ function Dashboard() {
   };
 
   const Slider = ({ label, leftLabel, rightLabel, value, onChange, min = 1, max = 5, step = 0.01 }) => {
-    const percentage = ((value - min) / (max - min)) * 100;
+    const percentage = Math.max(0, Math.min(100, ((value - min) / (max - min)) * 100));
+    
+    const handleChange = (e) => {
+      const newValue = parseFloat(e.target.value);
+      // Ensure value is within bounds
+      const clampedValue = Math.max(min, Math.min(max, newValue));
+      onChange(clampedValue);
+    };
+    
     return (
       <div className="space-y-2">
         <div className="flex justify-between items-center">
@@ -120,16 +128,16 @@ function Dashboard() {
         </div>
         <div className="flex items-center space-x-3">
           <span className="text-xs text-slate-400 w-20 text-right">{leftLabel}</span>
-          <div className="flex-1 relative">
+          <div className="flex-1 relative" style={{ pointerEvents: 'auto' }}>
             <input
               type="range"
               min={min}
               max={max}
               step={step}
               value={value}
-              onChange={(e) => onChange(parseFloat(e.target.value))}
+              onChange={handleChange}
               className="slider-input w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer"
-              style={{ '--slider-progress': `${percentage}%` }}
+              style={{ '--slider-progress': `${percentage}%`, pointerEvents: 'auto' }}
             />
           </div>
           <span className="text-xs text-slate-400 w-20">{rightLabel}</span>
@@ -401,34 +409,61 @@ function Dashboard() {
         }
         .slider-input {
           background: linear-gradient(to right, rgb(6, 182, 212) 0%, rgb(6, 182, 212) var(--slider-progress, 50%), rgb(51, 65, 85) var(--slider-progress, 50%), rgb(51, 65, 85) 100%);
+          -webkit-appearance: none;
+          appearance: none;
+          outline: none;
         }
         .slider-input::-webkit-slider-thumb {
+          -webkit-appearance: none;
           appearance: none;
           width: 20px;
           height: 20px;
           border-radius: 50%;
           background: rgb(6, 182, 212);
-          cursor: pointer;
+          cursor: grab;
           box-shadow: 0 0 10px rgba(6, 182, 212, 0.6), 0 0 20px rgba(6, 182, 212, 0.3);
           border: 2px solid rgb(8, 145, 178);
+          transition: transform 0.1s ease;
+          pointer-events: auto;
+        }
+        .slider-input::-webkit-slider-thumb:active {
+          cursor: grabbing;
+          transform: scale(1.1);
         }
         .slider-input::-moz-range-thumb {
           width: 20px;
           height: 20px;
           border-radius: 50%;
           background: rgb(6, 182, 212);
-          cursor: pointer;
+          cursor: grab;
           border: 2px solid rgb(8, 145, 178);
           box-shadow: 0 0 10px rgba(6, 182, 212, 0.6), 0 0 20px rgba(6, 182, 212, 0.3);
+          transition: transform 0.1s ease;
+          pointer-events: auto;
+        }
+        .slider-input::-moz-range-thumb:active {
+          cursor: grabbing;
+          transform: scale(1.1);
         }
         .slider-input::-webkit-slider-runnable-track {
           height: 8px;
           border-radius: 4px;
+          cursor: pointer;
         }
         .slider-input::-moz-range-track {
           height: 8px;
           border-radius: 4px;
           background: transparent;
+          cursor: pointer;
+        }
+        .slider-input:focus {
+          outline: none;
+        }
+        .slider-input:focus::-webkit-slider-thumb {
+          box-shadow: 0 0 15px rgba(6, 182, 212, 0.8), 0 0 25px rgba(6, 182, 212, 0.4);
+        }
+        .slider-input:focus::-moz-range-thumb {
+          box-shadow: 0 0 15px rgba(6, 182, 212, 0.8), 0 0 25px rgba(6, 182, 212, 0.4);
         }
       `}</style>
     </div>
