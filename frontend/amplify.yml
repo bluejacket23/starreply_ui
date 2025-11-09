@@ -3,14 +3,14 @@ frontend:
   phases:
     preBuild:
       commands:
-        - cd frontend && npm install
+        - cd ReviewSaas/frontend && npm install
     build:
       commands:
-        - cd frontend && npm run build
+        - cd ReviewSaas/frontend && npm run build
   artifacts:
-    baseDirectory: frontend/build
+    baseDirectory: ReviewSaas/frontend/build
     files:
       - '**/*'
   cache:
     paths:
-      - frontend/node_modules/**/*
+      - ReviewSaas/frontend/node_modules/**/*
