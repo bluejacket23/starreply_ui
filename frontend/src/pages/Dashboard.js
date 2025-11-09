@@ -19,11 +19,94 @@ function Dashboard() {
       name: 'Downtown Coffee Shop',
       address: '123 Main St, City, State 12345',
       autoReplyActive: false,
-      totalReviews: 0,
-      avgRating: 0,
+      totalReviews: 8,
+      avgRating: 4.4,
     }
   ]);
-  const [locationReviews, setLocationReviews] = useState({});
+  const [locationReviews, setLocationReviews] = useState({
+    'dummy-1': [
+      {
+        reviewId: 'review-1',
+        rating: 5,
+        reviewerName: 'Sarah Johnson',
+        updateTime: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+        createTime: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+        replyPosted: true,
+        replyText: 'Thank you so much for your kind words, Sarah! We\'re thrilled you enjoyed your visit. We look forward to serving you again soon!',
+        reviewTextPreview: 'Amazing coffee and the staff is so friendly! The atmosphere is perfect for working or catching up with friends. Will definitely be back!',
+      },
+      {
+        reviewId: 'review-2',
+        rating: 5,
+        reviewerName: 'Michael Chen',
+        updateTime: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+        createTime: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+        replyPosted: true,
+        replyText: 'Thank you, Michael! We\'re so glad you had a great experience. Your support means the world to us!',
+        reviewTextPreview: 'Best latte in town! The baristas really know their craft. The pastries are also incredible. Highly recommend!',
+      },
+      {
+        reviewId: 'review-3',
+        rating: 4,
+        reviewerName: 'Emily Rodriguez',
+        updateTime: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+        createTime: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+        replyPosted: true,
+        replyText: 'Thank you for the feedback, Emily! We appreciate your business and hope to see you again soon.',
+        reviewTextPreview: 'Great coffee shop with a cozy vibe. The WiFi is fast and the seating is comfortable. Only wish they had more vegan options.',
+      },
+      {
+        reviewId: 'review-4',
+        rating: 3,
+        reviewerName: 'David Thompson',
+        updateTime: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+        createTime: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+        replyPosted: false,
+        replyText: null,
+        reviewTextPreview: 'Coffee was okay but the service was a bit slow during peak hours. The place gets really crowded on weekends.',
+      },
+      {
+        reviewId: 'review-5',
+        rating: 5,
+        reviewerName: 'Jessica Martinez',
+        updateTime: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString(),
+        createTime: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString(),
+        replyPosted: true,
+        replyText: 'Thank you, Jessica! We\'re delighted you enjoyed everything. Can\'t wait to welcome you back!',
+        reviewTextPreview: 'Absolutely love this place! The cold brew is perfection and the staff remembers my order. It\'s become my go-to spot!',
+      },
+      {
+        reviewId: 'review-6',
+        rating: 4,
+        reviewerName: 'Robert Kim',
+        updateTime: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
+        createTime: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
+        replyPosted: true,
+        replyText: 'Thanks for the great review, Robert! We\'re happy you enjoyed your visit. See you next time!',
+        reviewTextPreview: 'Solid coffee shop with good vibes. The espresso is strong and the music selection is on point. Great place to study.',
+      },
+      {
+        reviewId: 'review-7',
+        rating: 2,
+        reviewerName: 'Amanda White',
+        updateTime: new Date(Date.now() - 18 * 24 * 60 * 60 * 1000).toISOString(),
+        createTime: new Date(Date.now() - 18 * 24 * 60 * 60 * 1000).toISOString(),
+        replyPosted: false,
+        replyText: null,
+        reviewTextPreview: 'The coffee was lukewarm and my order was wrong. The staff seemed overwhelmed. Hopefully it was just an off day.',
+      },
+      {
+        reviewId: 'review-8',
+        rating: 5,
+        reviewerName: 'James Wilson',
+        updateTime: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString(),
+        createTime: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString(),
+        replyPosted: true,
+        replyText: 'Thank you, James! We\'re thrilled you had such a positive experience. Your support means everything to us!',
+        reviewTextPreview: 'Fantastic coffee and even better service! The owner is super friendly and the place has such a welcoming atmosphere. 10/10!',
+      },
+    ],
+  });
   const [loadingReviews, setLoadingReviews] = useState({});
 
   useEffect(() => {
@@ -248,22 +331,25 @@ function Dashboard() {
                           {location.autoReplyActive ? 'Active' : 'Inactive'}
                         </span>
                       </div>
-                      {/* Toggle Switch */}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleAutoReply(location.id);
-                        }}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                          location.autoReplyActive ? 'bg-cyan-500' : 'bg-slate-600'
-                        }`}
-                      >
-                        <span
-                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                            location.autoReplyActive ? 'translate-x-6' : 'translate-x-1'
+                      {/* Auto-Reply Label and Toggle */}
+                      <div className="flex items-center space-x-2">
+                        <span className="text-sm text-slate-300">Auto-Reply</span>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleAutoReply(location.id);
+                          }}
+                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                            location.autoReplyActive ? 'bg-cyan-500' : 'bg-slate-600'
                           }`}
-                        />
-                      </button>
+                        >
+                          <span
+                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                              location.autoReplyActive ? 'translate-x-6' : 'translate-x-1'
+                            }`}
+                          />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -282,7 +368,11 @@ function Dashboard() {
                       </div>
                       <div className="bg-slate-900/50 rounded-lg p-3">
                         <div className="text-sm text-slate-400">Response Rate</div>
-                        <div className="text-xl font-bold text-green-400">0%</div>
+                        <div className="text-xl font-bold text-green-400">
+                          {locationReviews[location.id] 
+                            ? Math.round((locationReviews[location.id].filter(r => r.replyPosted).length / locationReviews[location.id].length) * 100)
+                            : 0}%
+                        </div>
                       </div>
                     </div>
                     
