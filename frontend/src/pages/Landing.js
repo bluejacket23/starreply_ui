@@ -351,11 +351,11 @@ function Landing() {
             <div 
               data-animate
               id="hero-content"
-              className={`transition-all duration-1000 ${
+              className={`transition-all duration-1000 overflow-visible ${
                 visibleElements.has('hero-content') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
               }`}
             >
-              <h1 className="text-4xl md:text-5xl font-bold mb-6 leading-relaxed bg-gradient-to-r from-white via-cyan-200 to-purple-300 bg-clip-text text-transparent" style={{ letterSpacing: '0.02em' }}>
+              <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-white via-cyan-200 to-purple-300 bg-clip-text text-transparent pb-3 overflow-visible" style={{ letterSpacing: '0.02em', lineHeight: '1.4' }}>
                 Turn every review into a 5-star interaction - Without lifting a finger.
               </h1>
               <p className="text-xl text-slate-300 mb-8 leading-relaxed">
