@@ -1,0 +1,166 @@
+service: review-saas
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: us-east-2
+  stage: ${opt:stage, 'dev'}
+  environment:
+    STAGE: ${self:provider.stage}
+    USERS_TABLE: ${self:service}-users-${self:provider.stage}
+    REVIEWS_TABLE: ${self:service}-review-replies-${self:provider.stage}
+    SECRETS_MANAGER_ARN: ${ssm:/review-saas/secrets-arn}
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:Query
+            - dynamodb:Scan
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+          Resource:
+            - arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.USERS_TABLE}
+            - arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.REVIEWS_TABLE}
+        - Effect: Allow
+          Action:
+            - ses:SendEmail
+            - ses:SendRawEmail
+          Resource: "*"
+        - Effect: Allow
+          Action:
+            - secretsmanager:GetSecretValue
+          Resource: ${ssm:/review-saas/secrets-arn}
+
+functions:
+  fetchReviews:
+    handler: lambdas/fetchReviews.handler
+    timeout: 60
+    events:
+      - schedule:
+          rate: rate(1 day)
+          enabled: true
+    environment:
+      GOOGLE_OAUTH_CLIENT_ID: arn:aws:secretsmanager:us-east-2:954976304902:secret:GOOGLE_CLIENT_ID-QN46Rc
+      GOOGLE_OAUTH_CLIENT_SECRET: arn:aws:secretsmanager:us-east-2:954976304902:secret:GOOGLE_CLIENT_SECRET-SX7M4A
+
+  generateAndPostReplies:
+    handler: lambdas/generateAndPostReplies.handler
+    timeout: 120
+    events:
+      - schedule:
+          rate: rate(1 hour)
+          enabled: true
+    environment:
+      OPENAI_API_KEY_SECRET: arn:aws:secretsmanager:us-east-2:954976304902:secret:OPENAI_API_KEY-7agRgu
+      GOOGLE_OAUTH_CLIENT_ID: arn:aws:secretsmanager:us-east-2:954976304902:secret:GOOGLE_CLIENT_ID-QN46Rc
+      GOOGLE_OAUTH_CLIENT_SECRET: arn:aws:secretsmanager:us-east-2:954976304902:secret:GOOGLE_CLIENT_SECRET-SX7M4A
+
+  sendSummaryEmail:
+    handler: lambdas/sendSummaryEmail.handler
+    timeout: 60
+    events:
+      - schedule:
+          rate: cron(0 9 * * ? *)
+          enabled: true
+    environment:
+      FROM_EMAIL: ${ssm:/review-saas/from-email}
+
+  createCheckoutSession:
+    handler: lambdas/createCheckoutSession.handler
+    timeout: 30
+    events:
+      - http:
+          path: /create-checkout-session
+          method: post
+          cors: true
+    environment:
+      STRIPE_SECRET_KEY_SECRET: ${ssm:/review-saas/stripe-secret-key}
+      STRIPE_WEBHOOK_SECRET: ${ssm:/review-saas/stripe-webhook-secret}
+
+  stripeWebhook:
+    handler: lambdas/stripeWebhook.handler
+    timeout: 30
+    events:
+      - http:
+          path: /stripe-webhook
+          method: post
+          cors: false
+
+  userStats:
+    handler: lambdas/userStats.handler
+    timeout: 30
+    events:
+      - http:
+          path: /userStats
+          method: get
+          cors: true
+
+  connectGoogle:
+    handler: lambdas/connectGoogle.handler
+    timeout: 30
+    events:
+      - http:
+          path: /connect-google
+          method: post
+          cors: true
+
+  updateTone:
+    handler: lambdas/updateTone.handler
+    timeout: 30
+    events:
+      - http:
+          path: /update-tone
+          method: post
+          cors: true
+
+resources:
+  Resources:
+    UsersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.USERS_TABLE}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: userId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: userId
+            KeyType: HASH
+        StreamSpecification:
+          StreamViewType: NEW_AND_OLD_IMAGES
+
+    ReviewRepliesTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.REVIEWS_TABLE}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: userId
+            AttributeType: S
+          - AttributeName: reviewId
+            AttributeType: S
+          - AttributeName: postedStatus
+            AttributeType: S
+        KeySchema:
+          - AttributeName: userId
+            KeyType: HASH
+          - AttributeName: reviewId
+            KeyType: RANGE
+        GlobalSecondaryIndexes:
+          - IndexName: PostedIndex
+            KeySchema:
+              - AttributeName: userId
+                KeyType: HASH
+              - AttributeName: postedStatus
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+
+plugins:
+  - serverless-offline
+
