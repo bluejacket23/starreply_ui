@@ -23,6 +23,8 @@ function Dashboard() {
       avgRating: 0,
     }
   ]);
+  const [locationReviews, setLocationReviews] = useState({});
+  const [loadingReviews, setLoadingReviews] = useState({});
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -78,6 +80,33 @@ function Dashboard() {
     }
   };
 
+  const fetchLocationReviews = async (locationId) => {
+    if (loadingReviews[locationId] || locationReviews[locationId]) {
+      return; // Already loading or loaded
+    }
+
+    setLoadingReviews(prev => ({ ...prev, [locationId]: true }));
+
+    try {
+      const response = await axios.get(`${API_ENDPOINT}/locations/${locationId}/reviews`, {
+        params: { userId },
+      });
+      
+      setLocationReviews(prev => ({
+        ...prev,
+        [locationId]: response.data.reviews || [],
+      }));
+    } catch (error) {
+      console.error(`Error fetching reviews for location ${locationId}:`, error);
+      setLocationReviews(prev => ({
+        ...prev,
+        [locationId]: [],
+      }));
+    } finally {
+      setLoadingReviews(prev => ({ ...prev, [locationId]: false }));
+    }
+  };
+
   const toggleLocationExpanded = (locationId) => {
     setExpandedLocations(prev => {
       const newSet = new Set(prev);
@@ -85,6 +114,8 @@ function Dashboard() {
         newSet.delete(locationId);
       } else {
         newSet.add(locationId);
+        // Fetch reviews when expanding
+        fetchLocationReviews(locationId);
       }
       return newSet;
     });
@@ -254,6 +285,60 @@ function Dashboard() {
                         <div className="text-xl font-bold text-green-400">0%</div>
                       </div>
                     </div>
+                    
+                    {/* Reviews Section */}
+                    <div className="mb-4">
+                      <h3 className="text-lg font-semibold text-white mb-3">Recent Reviews</h3>
+                      {loadingReviews[location.id] ? (
+                        <div className="text-center py-4">
+                          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-cyan-400 mx-auto"></div>
+                          <p className="mt-2 text-slate-400 text-sm">Loading reviews...</p>
+                        </div>
+                      ) : locationReviews[location.id] && locationReviews[location.id].length > 0 ? (
+                        <div className="space-y-3">
+                          {locationReviews[location.id].map((review) => (
+                            <div key={review.reviewId} className="bg-slate-900/50 rounded-lg p-4 border border-slate-700/50">
+                              <div className="flex items-start justify-between mb-2">
+                                <div className="flex items-center space-x-3">
+                                  <div className="text-yellow-400 font-semibold">
+                                    {'⭐'.repeat(review.rating || 0)}
+                                  </div>
+                                  <div>
+                                    <div className="text-sm font-medium text-white">{review.reviewerName}</div>
+                                    <div className="text-xs text-slate-400">
+                                      {new Date(review.updateTime || review.createTime).toLocaleDateString()}
+                                    </div>
+                                  </div>
+                                </div>
+                                {review.replyPosted ? (
+                                  <span className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded border border-green-500/30">
+                                    ✓ Replied
+                                  </span>
+                                ) : (
+                                  <span className="text-xs bg-yellow-500/20 text-yellow-400 px-2 py-1 rounded border border-yellow-500/30">
+                                    Pending
+                                  </span>
+                                )}
+                              </div>
+                              {review.reviewTextPreview && (
+                                <p className="text-slate-300 text-sm mb-2">{review.reviewTextPreview}</p>
+                              )}
+                              {review.replyText && (
+                                <div className="mt-3 pt-3 border-t border-slate-700/50">
+                                  <div className="text-xs text-slate-400 mb-1">Reply:</div>
+                                  <p className="text-sm text-cyan-300">{review.replyText}</p>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-4 text-slate-400 text-sm">
+                          No reviews found for this location.
+                        </div>
+                      )}
+                    </div>
+
                     <button
                       onClick={() => navigate(`/tone-settings/${location.id}`)}
                       className="w-full bg-gradient-to-r from-cyan-500 to-purple-600 text-white py-2 px-4 rounded-lg hover:from-cyan-600 hover:to-purple-700 transition shadow-lg shadow-cyan-500/50 font-semibold"
