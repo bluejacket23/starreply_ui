@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
 
 const API_ENDPOINT = process.env.REACT_APP_API_ENDPOINT || 'https://your-api-id.execute-api.us-east-1.amazonaws.com/dev';
@@ -109,14 +109,33 @@ function Dashboard() {
   };
 
   const Slider = ({ label, leftLabel, rightLabel, value, onChange, min = 1, max = 5, step = 0.01 }) => {
+    const sliderRef = useRef(null);
     const percentage = Math.max(0, Math.min(100, ((value - min) / (max - min)) * 100));
     
     const handleChange = (e) => {
       const newValue = parseFloat(e.target.value);
-      // Ensure value is within bounds
       const clampedValue = Math.max(min, Math.min(max, newValue));
       onChange(clampedValue);
     };
+    
+    // Use native input event for continuous updates during drag
+    useEffect(() => {
+      const slider = sliderRef.current;
+      if (!slider) return;
+      
+      const handleInput = (e) => {
+        const newValue = parseFloat(e.target.value);
+        const clampedValue = Math.max(min, Math.min(max, newValue));
+        onChange(clampedValue);
+      };
+      
+      // Add native input event listener for smooth dragging
+      slider.addEventListener('input', handleInput);
+      
+      return () => {
+        slider.removeEventListener('input', handleInput);
+      };
+    }, [min, max, onChange]);
     
     return (
       <div className="space-y-2">
@@ -128,8 +147,9 @@ function Dashboard() {
         </div>
         <div className="flex items-center space-x-3">
           <span className="text-xs text-slate-400 w-20 text-right">{leftLabel}</span>
-          <div className="flex-1 relative" style={{ pointerEvents: 'auto' }}>
+          <div className="flex-1 relative">
             <input
+              ref={sliderRef}
               type="range"
               min={min}
               max={max}
@@ -137,7 +157,7 @@ function Dashboard() {
               value={value}
               onChange={handleChange}
               className="slider-input w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer"
-              style={{ '--slider-progress': `${percentage}%`, pointerEvents: 'auto' }}
+              style={{ '--slider-progress': `${percentage}%` }}
             />
           </div>
           <span className="text-xs text-slate-400 w-20">{rightLabel}</span>
