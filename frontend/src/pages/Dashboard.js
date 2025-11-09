@@ -375,23 +375,23 @@ function Dashboard() {
               </p>
             </div>
             {/* Presets */}
-            <div className="flex flex-wrap gap-2 lg:ml-4">
+            <div className="flex gap-1.5 lg:ml-4 flex-shrink-0">
               {Object.entries(presets).map(([key, preset]) => (
                 <button
                   key={key}
                   onClick={() => applyPreset(key)}
-                  className={`relative px-3 py-2 bg-slate-700/50 hover:bg-slate-700 border rounded-lg transition text-xs font-medium text-slate-200 hover:text-white ${
+                  className={`relative px-2 py-1 bg-slate-700/50 hover:bg-slate-700 border rounded transition text-[10px] font-medium text-slate-200 hover:text-white ${
                     preset.popular 
                       ? 'border-cyan-400/50 hover:border-cyan-400 shadow-lg shadow-cyan-500/20' 
                       : 'border-slate-600/50 hover:border-slate-600'
                   }`}
                 >
                   {preset.popular && (
-                    <span className="absolute -top-2 -right-2 bg-gradient-to-r from-cyan-500 to-purple-600 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold whitespace-nowrap">
+                    <span className="absolute -top-1.5 -right-1.5 bg-gradient-to-r from-cyan-500 to-purple-600 text-white text-[8px] px-1 py-0.5 rounded-full font-bold whitespace-nowrap">
                       Most Popular
                     </span>
                   )}
-                  <span className="mr-1.5">{preset.icon}</span>
+                  <span className="mr-1 text-xs">{preset.icon}</span>
                   <span className="whitespace-nowrap">{preset.name}</span>
                 </button>
               ))}
