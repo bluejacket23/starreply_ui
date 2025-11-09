@@ -10,15 +10,15 @@ function Dashboard() {
   const [connectingGoogle, setConnectingGoogle] = useState(false);
   const [updatingTone, setUpdatingTone] = useState(false);
   
-  // Tone sliders (1-5 scale with decimal precision)
-  const [casualProfessional, setCasualProfessional] = useState(3.0);
-  const [conciseFriendly, setConciseFriendly] = useState(3.0);
-  const [humbleConfident, setHumbleConfident] = useState(3.0);
-  const [shortDetailed, setShortDetailed] = useState(3.0);
-  const [calmExcited, setCalmExcited] = useState(3.0);
+  // Tone sliders (1-10 scale with decimal precision)
+  const [casualProfessional, setCasualProfessional] = useState(5.0);
+  const [conciseFriendly, setConciseFriendly] = useState(5.0);
+  const [humbleConfident, setHumbleConfident] = useState(5.0);
+  const [shortDetailed, setShortDetailed] = useState(5.0);
+  const [calmExcited, setCalmExcited] = useState(5.0);
   
   // Negative review settings
-  const [empatheticNeutral, setEmpatheticNeutral] = useState(3.0);
+  const [empatheticNeutral, setEmpatheticNeutral] = useState(5.0);
   const [supportEmail, setSupportEmail] = useState('');
   const [includeSupportEmail, setIncludeSupportEmail] = useState(false);
 
@@ -52,12 +52,12 @@ function Dashboard() {
       // Load saved tone settings if available
       if (response.data.user?.toneSettings) {
         const settings = response.data.user.toneSettings;
-        setCasualProfessional(settings.casualProfessional || 3.0);
-        setConciseFriendly(settings.conciseFriendly || 3.0);
-        setHumbleConfident(settings.humbleConfident || 3.0);
-        setShortDetailed(settings.shortDetailed || 3.0);
-        setCalmExcited(settings.calmExcited || 3.0);
-        setEmpatheticNeutral(settings.empatheticNeutral || 3.0);
+        setCasualProfessional(settings.casualProfessional || 5.0);
+        setConciseFriendly(settings.conciseFriendly || 5.0);
+        setHumbleConfident(settings.humbleConfident || 5.0);
+        setShortDetailed(settings.shortDetailed || 5.0);
+        setCalmExcited(settings.calmExcited || 5.0);
+        setEmpatheticNeutral(settings.empatheticNeutral || 5.0);
         setSupportEmail(settings.supportEmail || '');
         setIncludeSupportEmail(settings.includeSupportEmail || false);
       }
@@ -108,7 +108,66 @@ function Dashboard() {
     }
   };
 
-  const Slider = ({ label, leftLabel, rightLabel, value, onChange, min = 1, max = 5, step = 0.01 }) => {
+  const presets = {
+    corporate: {
+      name: 'Corporate Professional',
+      icon: '💼',
+      values: {
+        casualProfessional: 9.0,
+        conciseFriendly: 2.0,
+        humbleConfident: 7.5,
+        shortDetailed: 4.0,
+        calmExcited: 2.0,
+      }
+    },
+    warm: {
+      name: 'Warm & Welcoming',
+      icon: '🤗',
+      popular: true,
+      values: {
+        casualProfessional: 4.0,
+        conciseFriendly: 9.5,
+        humbleConfident: 3.5,
+        shortDetailed: 6.0,
+        calmExcited: 7.0,
+      }
+    },
+    startup: {
+      name: 'Startup Energy',
+      icon: '🚀',
+      values: {
+        casualProfessional: 2.0,
+        conciseFriendly: 5.0,
+        humbleConfident: 1.5,
+        shortDetailed: 4.0,
+        calmExcited: 5.0,
+      }
+    },
+    local: {
+      name: 'Local Business Casual',
+      icon: '🏪',
+      values: {
+        casualProfessional: 3.0,
+        conciseFriendly: 7.0,
+        humbleConfident: 4.0,
+        shortDetailed: 8.0,
+        calmExcited: 7.0,
+      }
+    }
+  };
+
+  const applyPreset = (presetKey) => {
+    const preset = presets[presetKey];
+    if (preset) {
+      setCasualProfessional(preset.values.casualProfessional);
+      setConciseFriendly(preset.values.conciseFriendly);
+      setHumbleConfident(preset.values.humbleConfident);
+      setShortDetailed(preset.values.shortDetailed);
+      setCalmExcited(preset.values.calmExcited);
+    }
+  };
+
+  const Slider = ({ label, leftLabel, rightLabel, value, onChange, min = 1, max = 10, step = 0.01 }) => {
     const sliderRef = useRef(null);
     const [localValue, setLocalValue] = useState(value);
     const [isDragging, setIsDragging] = useState(false);
@@ -308,10 +367,36 @@ function Dashboard() {
 
         {/* Tone Settings */}
         <div className="bg-slate-800/50 backdrop-blur-sm rounded-lg shadow-lg p-6 border border-slate-700/50 mb-8">
-          <h2 className="text-xl font-semibold mb-6 text-white">Reply Tone Settings</h2>
-          <p className="text-slate-300 mb-6">
-            Adjust the tone of AI-generated replies using the sliders below. Each slider ranges from 1 to 5.
-          </p>
+          <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start mb-6 gap-4">
+            <div>
+              <h2 className="text-xl font-semibold mb-2 text-white">Reply Tone Settings</h2>
+              <p className="text-slate-300 text-sm">
+                Adjust the tone of AI-generated replies using the sliders below. Each slider ranges from 1 to 10.
+              </p>
+            </div>
+            {/* Presets */}
+            <div className="flex flex-wrap gap-2 lg:ml-4">
+              {Object.entries(presets).map(([key, preset]) => (
+                <button
+                  key={key}
+                  onClick={() => applyPreset(key)}
+                  className={`relative px-3 py-2 bg-slate-700/50 hover:bg-slate-700 border rounded-lg transition text-xs font-medium text-slate-200 hover:text-white ${
+                    preset.popular 
+                      ? 'border-cyan-400/50 hover:border-cyan-400 shadow-lg shadow-cyan-500/20' 
+                      : 'border-slate-600/50 hover:border-slate-600'
+                  }`}
+                >
+                  {preset.popular && (
+                    <span className="absolute -top-2 -right-2 bg-gradient-to-r from-cyan-500 to-purple-600 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold whitespace-nowrap">
+                      Most Popular
+                    </span>
+                  )}
+                  <span className="mr-1.5">{preset.icon}</span>
+                  <span className="whitespace-nowrap">{preset.name}</span>
+                </button>
+              ))}
+            </div>
+          </div>
           
           <div className="space-y-6 mb-6">
             <Slider
